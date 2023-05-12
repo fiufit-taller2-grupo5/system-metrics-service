@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"os"
 )
 
 func main() {
-	fmt.Println("Hello, world!")
-
 	router := gin.Default()
 
 	metricsController, err := NewMetricsController()
@@ -17,8 +16,18 @@ func main() {
 
 	metricsController.SetUp(router)
 
-	err = router.Run(":8008")
+	port := portFromEnv()
+
+	err = router.Run(fmt.Sprintf(":%d", port))
 	if err != nil {
 		fmt.Println("Server failed running: " + err.Error())
+	}
+}
+
+func portFromEnv() int {
+	if os.Getenv("environment") == "production" {
+		return 80
+	} else {
+		return 8006
 	}
 }
