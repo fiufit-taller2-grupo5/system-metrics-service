@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: system-metrics-service-deployment
+  labels:
+    app: system-metrics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: system-metrics-service
+  template:
+    metadata:
+      labels:
+        app: system-metrics-service
+    spec:
+      containers:
+        - name: metrics-queue
+          image: registry.cloud.okteto.net/prod-szwtomas/system-metrics-service:v1
+          ports:
+            - containerPort: 80
+      restartPolicy: Always
