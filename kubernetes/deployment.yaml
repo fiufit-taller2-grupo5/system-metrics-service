@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: metrics-queue
-          image: registry.cloud.okteto.net/prod-szwtomas/system-metrics-service:v1
+          image: registry.cloud.okteto.net/prod2-szwtomas/system-metrics-service:v1
           ports:
             - containerPort: 80
       restartPolicy: Always
