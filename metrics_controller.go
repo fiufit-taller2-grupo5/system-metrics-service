@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,27 +29,61 @@ func (controller *MetricsController) SetUp(router gin.IRouter) {
 func (controller *MetricsController) GetMetric(c *gin.Context) {
 	metric, errMetric := getNameQueryParam(c)
 	if errMetric != nil {
+		fmt.Println(errMetric.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": errMetric.Error()})
 		return
 	}
 
-	numberOfDataPoints := getBucketsFromQueryParams(c)
-
+	interval := getIntervalFromQueryParam(c)
 	from, to, errTime := getFromAndToFromQueryParams(c)
+
+	numberOfDataPoints := bucketCountFromIntervalAndTimeSlice(*from, *to, interval)
+
 	if errTime != nil {
+		fmt.Println(errMetric.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": errTime.Error()})
 		return
 	}
 
 	metricDocuments, mongoErr := controller.getDocsByMetricAndTimeBounds(*metric, *from, *to)
 	if mongoErr != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": mongoErr.Error()})
+		fmt.Println(errMetric.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": mongoErr.Error()})
 		return
 	}
 
 	dataPoints := aggregateMetricsByBucket(metricDocuments, numberOfDataPoints, *from, *to)
 
 	c.JSON(http.StatusOK, dataPoints)
+}
+
+func bucketCountFromIntervalAndTimeSlice(from, to time.Time, interval string) int {
+	var divisor int64
+
+	switch interval {
+	case "minutes":
+		divisor = int64(time.Minute)
+	case "hours":
+		divisor = int64(time.Hour)
+	case "days":
+		divisor = int64(24 * time.Hour)
+	case "weeks":
+		divisor = int64(7 * 24 * time.Hour)
+	case "months":
+		divisor = int64(30 * 24 * time.Hour) // using a 30-day approximation for simplicity
+	case "years":
+		divisor = int64(365 * 24 * time.Hour) // using a 365-day approximation for simplicity
+	default:
+		return 10 // default interval
+	}
+
+	duration := to.Sub(from)
+	if duration < 0 {
+		duration = -duration
+	}
+
+	bucketCount := int(duration.Nanoseconds()/divisor) + 1
+	return bucketCount
 }
 
 func getFromAndToFromQueryParams(c *gin.Context) (*time.Time, *time.Time, error) {
@@ -67,14 +102,19 @@ func getFromAndToFromQueryParams(c *gin.Context) (*time.Time, *time.Time, error)
 	return &fromTime, &toTime, nil
 }
 
-func getBucketsFromQueryParams(c *gin.Context) int {
-	bucketsQueryParam := c.Query("buckets")
-	bucketsAmount, err := strconv.Atoi(bucketsQueryParam)
-	if err != nil || bucketsAmount < 3 {
-		return 10
+func getIntervalFromQueryParam(c *gin.Context) string {
+	intervalQueryParam := c.Query("interval")
+
+	if !validInterval(intervalQueryParam) {
+		return "days"
 	}
 
-	return bucketsAmount
+	return strings.ToLower(intervalQueryParam)
+}
+
+func validInterval(interval string) bool {
+	interval = strings.ToLower(interval)
+	return interval == "minutes" || interval == "hours" || interval == "days" || interval == "weeks" || interval == "months" || interval == "years"
 }
 
 func getNameQueryParam(c *gin.Context) (*string, error) {
