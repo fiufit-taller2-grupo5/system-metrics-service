@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"os"
 )
 
 func main() {
 	router := gin.Default()
-
+	router.Use(cors.Default())
 	metricsController, err := NewMetricsController()
 	if err != nil {
 		fmt.Println("Could not start metrics controller: " + err.Error())
