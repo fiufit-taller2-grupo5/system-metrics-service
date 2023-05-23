@@ -74,6 +74,7 @@ func bucketCountFromIntervalAndTimeSlice(from, to time.Time, interval string) in
 	case "years":
 		divisor = int64(365 * 24 * time.Hour) // using a 365-day approximation for simplicity
 	default:
+		fmt.Println("Using default interval")
 		return 10 // default interval
 	}
 
@@ -87,14 +88,14 @@ func bucketCountFromIntervalAndTimeSlice(from, to time.Time, interval string) in
 }
 
 func getFromAndToFromQueryParams(c *gin.Context) (*time.Time, *time.Time, error) {
-	from := c.Query("from")
-	to := c.Query("to")
-	if from == "" || to == "" {
-		return nil, nil, errors.New("'from' and/or 'to' not specified")
+	from, fromExists := c.Get("from")
+	to, toExists := c.Get("to")
+	if !fromExists || !toExists || from == "" || to == "" {
+		return nil, nil, errors.New("'from' and/or 'to' not specified or bad formatted")
 	}
 
-	fromTime, fromTimeErr := time.Parse(time.RFC3339, from)
-	toTime, toTimeErr := time.Parse(time.RFC3339, to)
+	fromTime, fromTimeErr := time.Parse(time.RFC3339, from.(string))
+	toTime, toTimeErr := time.Parse(time.RFC3339, to.(string))
 	if fromTimeErr != nil || toTimeErr != nil {
 		return nil, nil, errors.New("'from' and/or 'to' have bad timestamp format")
 	}
