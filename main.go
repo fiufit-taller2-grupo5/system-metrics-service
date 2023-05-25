@@ -19,7 +19,6 @@ func main() {
 	}
 
 	metricsController.SetUp(router)
-
 	port := portFromEnv()
 
 	err = router.Run(fmt.Sprintf(":%d", port))
@@ -35,3 +34,4 @@ func portFromEnv() int {
 		return 8006
 	}
 }
+

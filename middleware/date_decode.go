@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/url"
@@ -28,6 +29,9 @@ func DateDecode() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
 			return
 		}
+
+		fmt.Println("Value of from: " + from)
+		fmt.Println("Value of to: " + to)
 
 		c.Set("from", from)
 		c.Set("to", to)

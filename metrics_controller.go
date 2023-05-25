@@ -37,13 +37,13 @@ func (controller *MetricsController) GetMetric(c *gin.Context) {
 	interval := getIntervalFromQueryParam(c)
 	from, to, errTime := getFromAndToFromQueryParams(c)
 
-	numberOfDataPoints := bucketCountFromIntervalAndTimeSlice(*from, *to, interval)
-
 	if errTime != nil {
-		fmt.Println(errMetric.Error())
+		fmt.Println(errTime.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": errTime.Error()})
 		return
 	}
+
+	numberOfDataPoints := bucketCountFromIntervalAndTimeSlice(*from, *to, interval)
 
 	metricDocuments, mongoErr := controller.getDocsByMetricAndTimeBounds(*metric, *from, *to)
 	if mongoErr != nil {
@@ -83,7 +83,7 @@ func bucketCountFromIntervalAndTimeSlice(from, to time.Time, interval string) in
 		duration = -duration
 	}
 
-	bucketCount := int(duration.Nanoseconds()/divisor) + 1
+	bucketCount := int(duration.Nanoseconds() / divisor)
 	return bucketCount
 }
 
@@ -91,7 +91,8 @@ func getFromAndToFromQueryParams(c *gin.Context) (*time.Time, *time.Time, error)
 	from, fromExists := c.Get("from")
 	to, toExists := c.Get("to")
 	if !fromExists || !toExists || from == "" || to == "" {
-		return nil, nil, errors.New("'from' and/or 'to' not specified or bad formatted")
+		errorMessage := "'from' and/or 'to' not specified or bad formatted"
+		return nil, nil, errors.New(errorMessage)
 	}
 
 	fromTime, fromTimeErr := time.Parse(time.RFC3339, from.(string))
