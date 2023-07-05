@@ -14,11 +14,11 @@ First, make sure the Mongo Atlas credentials are set correctly. To run the serve
 
 ## Endpoints
 
-The only endpoint is a GET to `api/metrics`. It needs some query params to get the query configuration:
+The only endpoint is a GET to `/api/metrics`. It needs some query params to get the query configuration:
 
 1. `metric`: The metric name to get, its the same name than stored in mongo. E.g: `user-created`
 2. `interval`: The grouping interval of the data points. It can be: `minutes`, `hours`, `days`, `weeks`, `months`, `years`. The default value is `days`, if not specified.
-3. `from` and `to`: The date range for the data points. Is a string with format RFC3339.
+3. `from` and `to`: The date range for the data points. Is a string with format [RFC3339](https://www.rfc-editor.org/rfc/rfc3339).
 
 ## How does it work
 
@@ -29,7 +29,7 @@ Once a request is received, it parses all query params, and calculates the amoun
   "start": "2020-01-01T00:00:00Z",
   "end": "2020-01-02T00:00:00Z",
   "count": 10,
-  "position": 1 // The position in the array
+  "position": 1
 }
 ```
 
